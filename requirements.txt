@@ -1,4 +1,6 @@
-flask
+Flask
 ultralytics
-opencv-python
+opencv-python-headless # Changed this line
+numpy
 gunicorn
+onnxruntime==1.17.1
