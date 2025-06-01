@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCS Predictor | Cow Body Condition Scoring</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --primary-light: #6a8fc5;
+            --secondary: #ff914d;
+            --secondary-light: #ffaa6d;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --white: #ffffff;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #3a5a80);
+            color: var(--white);
+            padding: 2.5rem 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -30px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-weight: 300;
+            opacity: 0.9;
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        main {
+            flex: 1;
+            padding: 3rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .file-upload {
+            position: relative;
+            margin: 2rem 0;
+        }
+
+        .file-upload input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            border-color: var(--primary);
+            background-color: rgba(74, 111, 165, 0.05);
+        }
+
+        .file-upload-label i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload-label h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .file-upload-label p {
+            color: #6b7280;
+            font-size: 0.95rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 111, 165, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 111, 165, 0.4);
+            background: linear-gradient(to right, var(--primary-light), var(--secondary-light));
+        }
+
+        .btn i {
+            margin-right: 10px;
+        }
+
+        .btn-realtime {
+            background: linear-gradient(to right, #28a745, #4a6fa5);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-realtime:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(to right, #48c774, #6a8fc5);
+        }
+
+        .result-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .result-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .prediction-badge {
+            background: linear-gradient(to right, var(--secondary), var(--danger));
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1.3rem;
+            box-shadow: 0 3px 10px rgba(255, 145, 77, 0.3);
+        }
+
+        .image-container {
+            position: relative;
+            margin: 2rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .image-container img {
+            width: 100%;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .image-container:hover img {
+            transform: scale(1.02);
+        }
+
+        .result-details {
+            margin-top: 2rem;
+        }
+
+        .result-details h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .result-details p {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .score-info {
+            background-color: var(--light);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .score-info h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .score-scale {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .score-item {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 8px;
+            padding: 1.2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .score-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .score-range {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .score-description {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            background-color: var(--dark);
+            color: var(--light);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            margin: 2rem auto;
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(74, 111, 165, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 0.5rem;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Camera Modal Styles */
+        #cameraModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #cameraModal > div {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        #cameraFeed {
+            width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+
+        #photoCanvas {
+            display: none;
+        }
+
+        #realtimeResult {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(0, 255, 0, 0.8);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.8rem;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 3px solid white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        #processedImage {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #cameraModal .btn {
+            margin: 0 0.5rem;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            overflow: hidden;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .camera-container video,
+        .camera-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.8rem;
+            }
+
+            .file-upload-label {
+                padding: 2rem 1.5rem;
+            }
+
+            .btn, .btn-realtime {
+                padding: 0.9rem 2rem;
+                font-size: 1rem;
+            }
+
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            #realtimeResult {
+                font-size: 1.4rem;
+                padding: 0.8rem 1.5rem;
+            }
+
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .button-container .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .file-upload-label h3 {
+                font-size: 1.1rem;
+            }
+
+            .btn, .btn-realtime {
+                padding: 0.8rem 1.8rem;
+                font-size: 0.95rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .score-item {
+                min-width: 100%;
+            }
+
+            #realtimeResult {
+                font-size: 1.2rem;
+                padding: 0.6rem 1.2rem;
+                top: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-content">
+                <h1>Predict Body Condition Score of cows</h1>
+                <p class="subtitle">Cow Body Condition Scoring System for precise cattle health assessment</p>
+            </div>
+        </header>
+
+        <main>
+            <div class="card">
+                <div class="upload-section">
+                    <h2>Upload Cow Image</h2>
+                    <p>Get an instant Body Condition Score prediction for your cattle</p>
+
+                    <form action="/" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="file-upload">
+                            <input type="file" name="image" id="imageInput" accept="image/*" required>
+                            <label for="imageInput" class="file-upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h3>Choose an image file</h3>
+                                <p>Supported formats: JPG, PNG, JPEG. Maximum file size: 5MB</p>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                            <button type="submit" class="btn">
+                                <i class="fas fa-calculator"></i>
+                                Predict BCS Score
+                            </button>
+
+                            <button type="button" class="btn" id="captureBtn" style="background: linear-gradient(to right, #ff914d, #dc3545);">
+                                <i class="fas fa-camera"></i>
+                                Capture Photo
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="spinner" id="loadingSpinner"></div>
+                </div>
+            </div>
+
+            <!-- Camera Modal -->
+            <div id="cameraModal">
+                <div>
+                    <div class="camera-container">
+                        <video id="cameraFeed" autoplay playsinline></video>
+                        <canvas id="photoCanvas"></canvas>
+                        <canvas id="processedImage"></canvas>
+                        <div id="realtimeResult"></div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button id="takePhotoBtn" class="btn" style="background: linear-gradient(to right, #28a745, #4a6fa5);">
+                        <i class="fas fa-camera"></i> Take Photo
+                    </button>
+                    <button id="predictRealtimeBtn" class="btn-realtime">
+                        <i class="fas fa-bolt"></i> Real-time Predict
+                    </button>
+                    <button id="closeCameraBtn" class="btn" style="background: linear-gradient(to right, #6c757d, #343a40);">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+
+            {% if image_path %}
+            <div class="card result-container" id="resultContainer" style="display: block;">
+                <div class="result-header">
+                    <h2 class="result-title">Prediction Result</h2>
+                    <div class="prediction-badge">{{ label }}</div>
+                </div>
+
+                <div class="image-container">
+                    <img src="{{ image_path }}" alt="BCS Prediction Result">
+                </div>
+
+                <div class="result-details">
+                    <h3>About This Score</h3>
+                    <p>Body Condition Scoring (BCS) is a management tool for assessing the nutritional status and health of cows. Our AI model evaluates key physical characteristics to determine the score on a standardized scale.</p>
+
+                    <div class="score-info">
+                        <h4>BCS Scale Interpretation</h4>
+                        <p>The Body Condition Score typically ranges from 1 (emaciated) to 5 (obese), with 3 being ideal for most cattle. Here's what your score means:</p>
+
+                        <div class="score-scale">
+                            <div class="score-item">
+                                <div class="score-value">1</div>
+                                <div class="score-range">Emaciated</div>
+                                <div class="score-description">Severely underweight, all bones visible, no fat reserves. Immediate intervention needed.</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">2</div>
+                                <div class="score-range">Thin</div>
+                                <div class="score-description">Some fat cover but ribs still visible. Needs improved nutrition.</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">3</div>
+                                <div class="score-range">Ideal</div>
+                                <div class="score-description">Good condition, ribs covered but palpable. Optimal for health and production.</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">4</div>
+                                <div class="score-range">Fat</div>
+                                <div class="score-description">Excess fat covering, ribs not palpable. May affect reproduction.</div>
+                            </div>
+                            <div class="score-item">
+                                <div class="score-value">5</div>
+                                <div class="score-range">Obese</div>
+                                <div class="score-description">Extremely fat, mobility may be affected. Health risks increased.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 2rem;">Recommendations</h3>
+                    <p>Based on your cow's current condition score, consider adjusting feeding practices and monitoring health indicators. For specific dietary recommendations, consult with a veterinarian or livestock nutritionist.</p>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <p><i class="fas fa-copyright"></i> BCS Predictor | Advanced Cattle Analytics System</p>
+                <p style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.8;">Developed with precision agriculture in mind</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Show loading spinner during form submission
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+        });
+
+        // Drag and drop functionality
+        const fileUploadLabel = document.querySelector('.file-upload-label');
+        const fileInput = document.getElementById('imageInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUploadLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUploadLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUploadLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            fileUploadLabel.style.borderColor = '#4a6fa5';
+            fileUploadLabel.style.backgroundColor = 'rgba(74, 111, 165, 0.1)';
+            fileUploadLabel.querySelector('i').style.color = '#3a5a80';
+        }
+
+        function unhighlight() {
+            fileUploadLabel.style.borderColor = '#d1d5db';
+            fileUploadLabel.style.backgroundColor = '#f9fafb';
+            fileUploadLabel.querySelector('i').style.color = '#4a6fa5';
+        }
+
+        fileUploadLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0 && files[0].type.match('image.*')) {
+                fileInput.files = files;
+                updateFileName(files[0].name);
+            }
+        }
+
+        // Update label when file is selected via click
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFileName(this.files[0].name);
+            }
+        });
+
+        function updateFileName(fileName) {
+            document.querySelector('.file-upload-label h3').textContent = fileName;
+            document.querySelector('.file-upload-label p').textContent = 'Click to change file';
+            document.querySelector('.file-upload-label i').className = 'fas fa-check-circle';
+            document.querySelector('.file-upload-label i').style.color = '#28a745';
+        }
+
+        // Display result container if coming back with results
+        {% if image_path %}
+        document.getElementById('resultContainer').style.display = 'block';
+        {% endif %}
+
+        // Camera functionality
+        const captureBtn = document.getElementById('captureBtn');
+        const cameraModal = document.getElementById('cameraModal');
+        const cameraFeed = document.getElementById('cameraFeed');
+        const takePhotoBtn = document.getElementById('takePhotoBtn');
+        const closeCameraBtn = document.getElementById('closeCameraBtn');
+        const photoCanvas = document.getElementById('photoCanvas');
+        const processedImage = document.getElementById('processedImage');
+        const uploadForm = document.getElementById('uploadForm');
+        const predictRealtimeBtn = document.getElementById('predictRealtimeBtn');
+        const realtimeResult = document.getElementById('realtimeResult');
+
+        let stream = null;
+        let realtimeInterval = null;
+        let isRealtimePredicting = false;
+
+        // Open camera function
+        async function openCamera() {
+            try {
+                cameraModal.style.display = 'flex';
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment', // Use rear camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                cameraFeed.srcObject = stream;
+
+                // Hide processed image when reopening camera
+                processedImage.style.display = 'none';
+                realtimeResult.style.display = 'none';
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                alert("Could not access the camera. Please make sure you have granted camera permissions.");
+            }
+        }
+
+        // Close camera function
+        function closeCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            cameraModal.style.display = 'none';
+            cameraFeed.srcObject = null;
+
+            // Stop real-time prediction if active
+            if (isRealtimePredicting) {
+                toggleRealtimePrediction();
+            }
+        }
+
+        // Take photo function
+        function takePhoto() {
+            const context = photoCanvas.getContext('2d');
+            photoCanvas.width = cameraFeed.videoWidth;
+            photoCanvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+
+            // Convert canvas to blob and set to file input
+            photoCanvas.toBlob(function(blob) {
+                const file = new File([blob], 'captured_photo.jpg', { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+                // Update UI
+                updateFileName('Captured Photo');
+
+                // Close camera
+                closeCamera();
+            }, 'image/jpeg', 0.9);
+        }
+
+        // Function to capture frame and send for prediction
+        async function predictFrame() {
+            const canvas = document.createElement('canvas');
+            canvas.width = cameraFeed.videoWidth;
+            canvas.height = cameraFeed.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to blob
+            canvas.toBlob(async function(blob) {
+                const formData = new FormData();
+                formData.append('image', blob, 'frame.jpg');
+
+                try {
+                    const response = await fetch('/predict_realtime', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+
+                    // Display the prediction result
+                    if (data.has_detection) {
+                        // Create an image from the base64 data
+                        const img = new Image();
+                        img.onload = function() {
+                            // Draw the processed image to the processedImage canvas
+                            const ctx = processedImage.getContext('2d');
+                            processedImage.width = img.width;
+                            processedImage.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+
+                            // Show the processed image and hide the video feed
+                            processedImage.style.display = 'block';
+                            cameraFeed.style.display = 'none';
+
+                            // Display the label
+                            realtimeResult.textContent = data.label;
+                            realtimeResult.style.display = 'block';
+                        };
+                        img.src = 'data:image/jpeg;base64,' + data.image;
+                    } else {
+                        // If no detection, show the original video feed
+                        processedImage.style.display = 'none';
+                        cameraFeed.style.display = 'block';
+                        realtimeResult.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error during real-time prediction:', error);
+                }
+            }, 'image/jpeg', 0.8);
+        }
+
+        // Toggle real-time prediction
+        function toggleRealtimePrediction() {
+            isRealtimePredicting = !isRealtimePredicting;
+
+            if (isRealtimePredicting) {
+                predictRealtimeBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Prediction';
+                predictRealtimeBtn.style.background = 'linear-gradient(to right, #dc3545, #ff914d)';
+                predictRealtimeBtn.style.boxShadow = '0 4px 15px rgba(220, 53, 69, 0.3)';
+                realtimeInterval = setInterval(predictFrame, 1000); // Predict every second
+            } else {
+                predictRealtimeBtn.innerHTML = '<i class="fas fa-bolt"></i> Real-time Predict';
+                predictRealtimeBtn.style.background = 'linear-gradient(to right, #28a745, #4a6fa5)';
+                predictRealtimeBtn.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+                clearInterval(realtimeInterval);
+                processedImage.style.display = 'none';
+                cameraFeed.style.display = 'block';
+                realtimeResult.style.display = 'none';
+            }
+        }
+
+        // Event listeners for camera
+        captureBtn.addEventListener('click', openCamera);
+        closeCameraBtn.addEventListener('click', closeCamera);
+        takePhotoBtn.addEventListener('click', takePhoto);
+        predictRealtimeBtn.addEventListener('click', toggleRealtimePrediction);
+
+        // Close modal when clicking outside
+        cameraModal.addEventListener('click', function(e) {
+            if (e.target === cameraModal) {
+                closeCamera();
+            }
+        });
+
+        // Handle form submission with captured photo
+        uploadForm.addEventListener('submit', function(e) {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please select or capture a photo first');
+            }
+        });
+    </script>
+</body>
+</html>
